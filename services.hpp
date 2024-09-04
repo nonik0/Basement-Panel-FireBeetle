@@ -118,8 +118,10 @@ void restDisplay()
     body.toLowerCase();
 
     if (body == "off") {
+      Serial.println("Turning display off");
       display = false;
     } else if (body == "on") {
+      Serial.println("Turning display on");
       display = true;
     } else {
       restServer.send(400, "text/plain", body);
@@ -141,9 +143,9 @@ void restBrightness()
         return;
     }
     else {
-        brightness = newBrightness;
+      Serial.println("Setting brightness to " + String(newBrightness));
+      brightness = newBrightness;
     }
-    return;
   }
 
   restServer.send(200, "text/plain", String(brightness));

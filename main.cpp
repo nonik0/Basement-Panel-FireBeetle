@@ -20,6 +20,7 @@ void displayReadings(void *pvParameters)
 {
   while (1)
   {
+    if (!display) continue;
     displayManager.displayNumbers(sensorReadings, 2);
     vTaskDelay(1);
   }
@@ -65,7 +66,7 @@ void setup()
 
   // EN_PIN PWM for brightness control
   pinMode(EN_PIN, OUTPUT);
-  digitalWrite(EN_PIN, HIGH);
+  digitalWrite(EN_PIN, display);
   analogWrite(EN_PIN, brightness);
 
   // create task for displayManager
@@ -84,14 +85,11 @@ void loop()
   if (millis() - lastReadingMillis > 1000)
     readSHT31();
 
-  if (display != lastDisplay) {
+  if (brightness != lastBrightness || display != lastDisplay) {
+    Serial.println("Display and/or display changed, updating EN_PIN");
     display = lastDisplay;
-    digitalWrite(EN_PIN, display);
-    analogWrite(EN_PIN, brightness);
-  }
-
-  if (brightness != lastBrightness) {
     brightness = lastBrightness;
+    digitalWrite(EN_PIN, display);
     analogWrite(EN_PIN, brightness);
   }
 
