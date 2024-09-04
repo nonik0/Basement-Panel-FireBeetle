@@ -13,15 +13,22 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
 unsigned long lastReadingMillis = 0;
 int sensorReadings[] = {0, 0};
 
-bool display, lastDisplay = true;
-uint8_t brightness, lastBrightness = 100;
+volatile bool display, lastDisplay = true;
+volatile uint8_t brightness, lastBrightness = 100;
 
 void displayReadings(void *pvParameters)
 {
   while (1)
   {
-    if (!display) continue;
-    displayManager.displayNumbers(sensorReadings, 2);
+    if (display)
+    {
+      displayManager.displayNumbers(sensorReadings, 2);
+    }
+    else
+    {
+      displayManager.clearDisplays(2);
+      digitalWrite(EN_PIN, LOW);
+    }
     vTaskDelay(1);
   }
 }
@@ -32,7 +39,7 @@ void readSHT31()
   float humidity = sht31.readHumidity();
 
   // convert to Fahrenheit
-  //temp = temp * 1.8 + 32;
+  // temp = temp * 1.8 + 32;
 
   sensorReadings[0] = temp;
   sensorReadings[1] = humidity;
@@ -85,13 +92,24 @@ void loop()
   if (millis() - lastReadingMillis > 1000)
     readSHT31();
 
-  if (brightness != lastBrightness || display != lastDisplay) {
-    Serial.println("Display and/or display changed, updating EN_PIN");
-    display = lastDisplay;
-    brightness = lastBrightness;
-    digitalWrite(EN_PIN, display);
-    analogWrite(EN_PIN, brightness);
-  }
+  // if (display != lastDisplay)
+  // {
+  //   Serial.println("Display changed, updating EN_PIN");
+  //   display = lastDisplay;
+  //   brightness = display ? 100 : 0;
+
+  //   digitalWrite(EN_PIN, display);
+  //   // analogWrite(EN_PIN, brightness);
+  // }
+
+  // if (brightness != lastBrightness) {
+  //   Serial.println("Display and/or brightness changed, updating EN_PIN");
+  //   display = lastDisplay;
+  //   brightness = lastBrightness;
+  //   Serial.print("Display: "); Serial.print(display); Serial.print(", Brightness: "); Serial.println(brightness);
+  //   digitalWrite(EN_PIN, display);
+  //   analogWrite(EN_PIN, brightness);
+  // }
 
   ArduinoOTA.handle();
   restServer.handleClient();
