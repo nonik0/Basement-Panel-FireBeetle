@@ -87,6 +87,7 @@ void loop()
   if (display != lastDisplay) {
     display = lastDisplay;
     digitalWrite(EN_PIN, display);
+    analogWrite(EN_PIN, brightness);
   }
 
   if (brightness != lastBrightness) {

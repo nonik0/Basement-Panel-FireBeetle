@@ -111,22 +111,38 @@ void restIndex()
     Serial.println("Served index.html");
 }
 
-void restSetDisplay()
+void restDisplay()
 {
   if (restServer.hasArg("plain")) {
     String body = restServer.arg("plain");
-    restServer.send(400, "text/plain", body);
-    return;
+    body.toLowerCase();
+
+    if (body == "off") {
+      display = false;
+    } else if (body == "on") {
+      display = true;
+    } else {
+      restServer.send(400, "text/plain", body);
+      return;
+    }
   }
 
   restServer.send(200, "text/plain", String(display));
 }
 
-void restSetBrightness()
+void restBrightness()
 {
   if (restServer.hasArg("plain")) {
     String body = restServer.arg("plain");
-    restServer.send(400, "text/plain", body);
+
+    int newBrightness = body.toInt();
+    if (newBrightness < 0 || newBrightness > 255) {  
+        restServer.send(400, "text/plain", body);
+        return;
+    }
+    else {
+        brightness = newBrightness;
+    }
     return;
   }
 
@@ -136,8 +152,8 @@ void restSetBrightness()
 void restSetup()
 {
     restServer.on("/", restIndex);
-    restServer.on("/display", restSetDisplay);
-    restServer.on("/brightness", restSetBrightness);
+    restServer.on("/display", restDisplay);
+    restServer.on("/brightness", restBrightness);
     restServer.begin();
 
     Serial.println("REST server running");
