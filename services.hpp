@@ -8,6 +8,8 @@
 #include "secrets.h"
 
 WebServer restServer(80);
+extern bool display;
+extern uint8_t brightness;
 
 void wifiSetup()
 {
@@ -111,15 +113,29 @@ void restIndex()
 
 void restSetDisplay()
 {
+  if (restServer.hasArg("plain")) {
+    String body = restServer.arg("plain");
+    restServer.send(400, "text/plain", body);
+    return;
+  }
+
+  restServer.send(200, "text/plain", String(display));
 }
 
 void restSetBrightness()
 {
+  if (restServer.hasArg("plain")) {
+    String body = restServer.arg("plain");
+    restServer.send(400, "text/plain", body);
+    return;
+  }
+
+  restServer.send(200, "text/plain", String(brightness));
 }
 
 void restSetup()
 {
-    restServer.on("/", HTTP_GET, restIndex);
+    restServer.on("/", restIndex);
     restServer.on("/display", restSetDisplay);
     restServer.on("/brightness", restSetBrightness);
     restServer.begin();

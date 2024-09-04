@@ -13,6 +13,9 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
 unsigned long lastReadingMillis = 0;
 int sensorReadings[] = {0, 0};
 
+bool display, lastDisplay = true;
+uint8_t brightness, lastBrightness = 100;
+
 void displayReadings(void *pvParameters)
 {
   while (1)
@@ -63,7 +66,7 @@ void setup()
   // EN_PIN PWM for brightness control
   pinMode(EN_PIN, OUTPUT);
   digitalWrite(EN_PIN, HIGH);
-  analogWrite(EN_PIN, 100);
+  analogWrite(EN_PIN, brightness);
 
   // create task for displayManager
   xTaskCreatePinnedToCore(
@@ -73,14 +76,26 @@ void setup()
       NULL,
       0,
       NULL,
-      0);
+      1);
 }
 
 void loop()
 {
   if (millis() - lastReadingMillis > 1000)
     readSHT31();
+
+  if (display != lastDisplay) {
+    display = lastDisplay;
+    digitalWrite(EN_PIN, display);
+  }
+
+  if (brightness != lastBrightness) {
+    brightness = lastBrightness;
+    analogWrite(EN_PIN, brightness);
+  }
+
   ArduinoOTA.handle();
   restServer.handleClient();
   checkWifiStatus();
+  delay(10);
 }
