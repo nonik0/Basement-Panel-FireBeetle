@@ -1,11 +1,8 @@
 #include <Adafruit_SHT31.h>
 #include <Arduino.h>
-// #include <ArduinoJson.h>
 #include <displayManager.h>
-// #include <HTTPClient.h>
-// #include <WiFi.h>
 
-#include "secrets.h"
+#include "services.hpp"
 
 #define LATCH_PIN 2
 #define EN_PIN 13
@@ -31,7 +28,7 @@ void readSHT31()
   float humidity = sht31.readHumidity();
 
   // convert to Fahrenheit
-  temp = temp * 1.8 + 32;
+  //temp = temp * 1.8 + 32;
 
   sensorReadings[0] = temp;
   sensorReadings[1] = humidity;
@@ -44,14 +41,21 @@ void readSHT31()
 
 void setup()
 {
-  // Serial.begin(115200);
-  // Serial.println("Starting...");
+  delay(5000);
+
+  Serial.begin(115200);
+  Serial.println("Starting setup...");
 
   if (!sht31.begin(0x44))
   {
     while (1)
       delay(1);
   }
+
+  wifiSetup();
+  mDnsSetup();
+  otaSetup();
+  restSetup();
 
   displayManager.begin();
   displayManager.clearDisplays(1);
@@ -60,8 +64,6 @@ void setup()
   pinMode(EN_PIN, OUTPUT);
   digitalWrite(EN_PIN, HIGH);
   analogWrite(EN_PIN, 100);
-
-  // WiFi.begin(SSID_NAME, SSID_PASS);
 
   // create task for displayManager
   xTaskCreatePinnedToCore(
@@ -78,4 +80,7 @@ void loop()
 {
   if (millis() - lastReadingMillis > 1000)
     readSHT31();
+  ArduinoOTA.handle();
+  restServer.handleClient();
+  checkWifiStatus();
 }
