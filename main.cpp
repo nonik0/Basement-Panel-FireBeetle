@@ -13,8 +13,8 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
 unsigned long lastReadingMillis = 0;
 int sensorReadings[] = {0, 0};
 
-volatile bool display, lastDisplay = true;
-volatile uint8_t brightness, lastBrightness = 100;
+volatile bool display = true, lastDisplay = true;
+volatile uint8_t brightness = 100, lastBrightness = 100;
 
 void displayReadings(void *pvParameters)
 {

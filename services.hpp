@@ -129,7 +129,7 @@ void restDisplay()
     }
   }
 
-  restServer.send(200, "text/plain", String(display));
+  restServer.send(200, "text/plain", display ? "on" : "off");
 }
 
 void restBrightness()
