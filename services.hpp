@@ -8,8 +8,8 @@
 #include "secrets.h"
 
 WebServer restServer(80);
-extern volatile bool display;
-extern volatile uint8_t brightness;
+extern bool display;
+extern uint8_t brightness;
 
 void wifiSetup()
 {

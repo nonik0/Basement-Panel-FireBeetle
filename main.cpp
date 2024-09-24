@@ -7,28 +7,37 @@
 #define LATCH_PIN 2
 #define EN_PIN 13
 
+#define EXT_PIN 14
+
 DisplayManager displayManager(LATCH_PIN);
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
 unsigned long lastReadingMillis = 0;
 int sensorReadings[] = {0, 0};
 
-volatile bool display = true, lastDisplay = true;
-volatile uint8_t brightness = 100, lastBrightness = 100;
+bool display = true;
+uint8_t brightness = 100;
 
 void displayReadings(void *pvParameters)
 {
+  int currentBrightness = brightness;
   while (1)
   {
     if (display)
     {
+      if (currentBrightness != brightness) {
+        currentBrightness = brightness;
+        analogWrite(EN_PIN, brightness);
+      }
       displayManager.displayNumbers(sensorReadings, 2);
     }
     else
     {
+      currentBrightness = 0;
+      digitalWrite(EN_PIN, 0);
       displayManager.clearDisplays(2);
-      digitalWrite(EN_PIN, LOW);
     }
+    
     vTaskDelay(1);
   }
 }
@@ -45,9 +54,6 @@ void readSHT31()
   sensorReadings[1] = humidity;
 
   lastReadingMillis = millis();
-
-  // Serial.print("Temp: "); Serial.print(temp); Serial.print("C, ");
-  // Serial.print("Humidity: "); Serial.print(humidity); Serial.println("%");
 }
 
 void setup()
@@ -71,6 +77,10 @@ void setup()
   displayManager.begin();
   displayManager.clearDisplays(1);
 
+  // EXT_PIN for external device control
+  pinMode(EXT_PIN, OUTPUT);
+  digitalWrite(EXT_PIN, display);
+
   // EN_PIN PWM for brightness control
   pinMode(EN_PIN, OUTPUT);
   digitalWrite(EN_PIN, display);
@@ -89,27 +99,10 @@ void setup()
 
 void loop()
 {
+  digitalWrite(EXT_PIN, display);
+
   if (millis() - lastReadingMillis > 1000)
     readSHT31();
-
-  // if (display != lastDisplay)
-  // {
-  //   Serial.println("Display changed, updating EN_PIN");
-  //   display = lastDisplay;
-  //   brightness = display ? 100 : 0;
-
-  //   digitalWrite(EN_PIN, display);
-  //   // analogWrite(EN_PIN, brightness);
-  // }
-
-  // if (brightness != lastBrightness) {
-  //   Serial.println("Display and/or brightness changed, updating EN_PIN");
-  //   display = lastDisplay;
-  //   brightness = lastBrightness;
-  //   Serial.print("Display: "); Serial.print(display); Serial.print(", Brightness: "); Serial.println(brightness);
-  //   digitalWrite(EN_PIN, display);
-  //   analogWrite(EN_PIN, brightness);
-  // }
 
   ArduinoOTA.handle();
   restServer.handleClient();
