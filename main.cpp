@@ -7,7 +7,8 @@
 #define LATCH_PIN 2
 #define EN_PIN 13
 
-#define EXT_PIN 14
+#define EXT1_PIN 14
+#define EXT2_PIN 15
 
 DisplayManager displayManager(LATCH_PIN);
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
@@ -78,8 +79,10 @@ void setup()
   displayManager.clearDisplays(1);
 
   // EXT_PIN for external device control
-  pinMode(EXT_PIN, OUTPUT);
-  digitalWrite(EXT_PIN, display);
+  pinMode(EXT1_PIN, OUTPUT);
+  pinMode(EXT2_PIN, OUTPUT);
+  digitalWrite(EXT1_PIN, display);
+  digitalWrite(EXT2_PIN, display);
 
   // EN_PIN PWM for brightness control
   pinMode(EN_PIN, OUTPUT);
@@ -99,7 +102,8 @@ void setup()
 
 void loop()
 {
-  digitalWrite(EXT_PIN, display);
+  digitalWrite(EXT1_PIN, display);
+  digitalWrite(EXT2_PIN, display);
 
   if (millis() - lastReadingMillis > 1000)
     readSHT31();

@@ -59,7 +59,7 @@ void otaSetup()
     Serial.println("OTA setting up...");
 
     // ArduinoOTA.setPort(3232);
-    ArduinoOTA.setHostname("LED-Filament-Display");
+    ArduinoOTA.setHostname("Basement-Panel-FireBeetle");
 
     ArduinoOTA
         .onStart([]()
@@ -95,7 +95,7 @@ void otaSetup()
 
 void mDnsSetup()
 {
-    if (!MDNS.begin("led-filament-display"))
+    if (!MDNS.begin("basement-panel-firebeetle"))
     {
         Serial.println("Error setting up MDNS responder!");
 
