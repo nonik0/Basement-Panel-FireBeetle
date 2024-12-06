@@ -1,115 +1,38 @@
-#include <Adafruit_SHT31.h>
-#include <Arduino.h>
-#include <displayManager.h>
-
-#include "services.hpp"
-
-#define LATCH_PIN 2
-#define EN_PIN 13
+#include "led_filament_display.h"
+#include "wifi_services.h"
 
 #define EXT1_PIN 14
 #define EXT2_PIN 15
 
-DisplayManager displayManager(LATCH_PIN);
-Adafruit_SHT31 sht31 = Adafruit_SHT31();
-
-unsigned long lastReadingMillis = 0;
-int sensorReadings[] = {0, 0};
-
-bool display = true;
-uint8_t brightness = 100;
-
-void displayReadings(void *pvParameters)
-{
-  int currentBrightness = brightness;
-  while (1)
-  {
-    if (display)
-    {
-      if (currentBrightness != brightness) {
-        currentBrightness = brightness;
-        analogWrite(EN_PIN, brightness);
-      }
-      displayManager.displayNumbers(sensorReadings, 2);
-    }
-    else
-    {
-      currentBrightness = 0;
-      digitalWrite(EN_PIN, 0);
-      displayManager.clearDisplays(2);
-    }
-    
-    vTaskDelay(1);
-  }
-}
-
-void readSHT31()
-{
-  float temp = sht31.readTemperature();
-  float humidity = sht31.readHumidity();
-
-  // convert to Fahrenheit
-  // temp = temp * 1.8 + 32;
-
-  sensorReadings[0] = temp;
-  sensorReadings[1] = humidity;
-
-  lastReadingMillis = millis();
-}
+LedFilamentDisplayTaskHandler ledFilamentDisplay;
+WifiServices wifiServices;
 
 void setup()
 {
-  delay(5000);
-
   Serial.begin(115200);
-  Serial.println("Starting setup...");
+  delay(5000);
+  log_d("Starting setup...");
 
-  if (!sht31.begin(0x44))
-  {
-    while (1)
-      delay(1);
-  }
-
-  wifiSetup();
-  mDnsSetup();
-  otaSetup();
-  restSetup();
-
-  displayManager.begin();
-  displayManager.clearDisplays(1);
-
-  // EXT_PIN for external device control
+  // external pins used for external device control
   pinMode(EXT1_PIN, OUTPUT);
   pinMode(EXT2_PIN, OUTPUT);
-  digitalWrite(EXT1_PIN, display);
-  digitalWrite(EXT2_PIN, display);
+  digitalWrite(EXT1_PIN, true);
+  digitalWrite(EXT2_PIN, true);
 
-  // EN_PIN PWM for brightness control
-  pinMode(EN_PIN, OUTPUT);
-  digitalWrite(EN_PIN, display);
-  analogWrite(EN_PIN, brightness);
+  wifiServices.setup(DEVICE_NAME);
 
-  // create task for displayManager
-  xTaskCreatePinnedToCore(
-      &displayReadings,
-      "displayManagerTask",
-      10000,
-      NULL,
-      0,
-      NULL,
-      1);
+  ledFilamentDisplay.createTask();
+  wifiServices.createTask();
+
+  wifiServices.registerSetDisplayCallback([&](bool displayState)
+                                          { ledFilamentDisplay.setDisplay(displayState); });
+  wifiServices.registerSetDisplayCallback([&](bool state)
+                                          { digitalWrite(EXT1_PIN, state);
+                                            digitalWrite(EXT2_PIN, state); });
+
+  log_d("Setup complete");
 }
 
 void loop()
 {
-  digitalWrite(EXT1_PIN, display);
-  digitalWrite(EXT2_PIN, display);
-
-  if (millis() - lastReadingMillis > 1000)
-    readSHT31();
-
-  ArduinoOTA.handle();
-  restServer.handleClient();
-  checkWifiStatus();
-  delay(10);
 }
